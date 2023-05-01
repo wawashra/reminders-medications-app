@@ -1,10 +1,11 @@
 {
     "database": {
-        "db": "production-db",
-        "username": "prod-user",
-        "password": "prod-pass",
-        "dialect": "sqlite",
-        "host": "./prod.sqlite",
-        "logging": false
+        "db": "remapp_prod",
+        "username": "postgres",
+        "password": "postgres",
+        "dialect": "postgres",
+        "host": "localhost",
+        "port": 54324,
+        "logging": true
     }
 }

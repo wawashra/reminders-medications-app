@@ -33,12 +33,12 @@ const getUser = async (id) => {
 };
 
 const updateUser = async (id, body) => {
-  const user = await User.findOne({ where: { id: id } });
+  let user = await User.findOne({ where: { id: id } });
   if (!user) {
     throw new UserNotFoundException();
   }
-  user.username = body.username;
-  await user.save();
+  await User.update({ username: body.username }, { where: { id: id } });
+  user = await User.findOne({ where: { id: id } });
   return user;
 };
 

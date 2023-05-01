@@ -20,7 +20,6 @@ Reminder.init(
   },
   {
     sequelize,
-    paranoid: true,
     modelName: 'reminder',
   }
 );

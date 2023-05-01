@@ -33,15 +33,23 @@ const getMedication = async (id, userId) => {
 };
 
 const updateMedication = async (id, userId, body) => {
-  const medication = await Medication.findOne({ where: { id: id, userId: userId } });
+  let medication = await Medication.findOne({ where: { id: id, userId: userId } });
   if (!medication) {
     throw new MedicationNotFoundException();
   }
-  medication.name = body.name;
-  medication.UpdatedAt = new Date();
 
-  const updatedMedication = await medication.save();
-  return updatedMedication;
+  await Medication.update(
+    { name: body.name },
+    {
+      where: {
+        id: id,
+        userId: userId,
+      },
+    }
+  );
+
+  medication = await Medication.findOne({ where: { id: id, userId: userId } });
+  return medication;
 };
 
 const deleteMedication = async (id, userId) => {

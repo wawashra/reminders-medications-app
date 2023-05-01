@@ -1,46 +1,82 @@
 const Reminder = require('./reminder');
 const Medication = require('../medication/medication');
-
-const ReminderNotFoundException = require('./reminderNotFoundException');
-
+const { Op } = require('sequelize');
 const MedicationNotFoundException = require('../medication/medicationNotFoundException');
-const create = async (reminder) => {
-  const { times, days, start_date, end_date, theUserId, medicationId } = reminder;
 
-  const medication = await Medication.findOne({ where: { id: medicationId, userId: theUserId } });
-  if (!medication) {
-    throw new MedicationNotFoundException();
+const createOrUpdate = async (reminder) => {
+  const { times, days, start_date, end_date, userId, medicationId } = reminder;
+
+  await getMedication(medicationId, userId);
+
+  let reminderObj = await Reminder.findOne({ where: { medicationId: medicationId } });
+
+  if (reminderObj) {
+    await Reminder.update(
+      { times, days, start_date, end_date, medicationId },
+      {
+        where: {
+          medicationId: medicationId,
+        },
+      }
+    );
+
+    reminderObj = await Reminder.findOne({ where: { medicationId: medicationId } });
+    return reminderObj;
   }
 
-  const reminderFromDb = await Reminder.findOne({ where: { medicationId: medicationId } });
-  if (reminderFromDb) {
-    return reminderFromDb;
-  }
-
-  const cretedReminder = await Reminder.create({ times, days, start_date, end_date, medicationId });
-  return cretedReminder;
+  reminderObj = await Reminder.create({ times, days, start_date, end_date, medicationId });
+  return reminderObj;
 };
 
-const getReminders = async (pagination, userId, medicationId) => {
-  const medication = await Medication.findOne({ where: { id: medicationId, userId: userId } });
-  if (!medication) {
-    throw new MedicationNotFoundException();
-  }
+const getReminders = async (userId, medicationId) => {
+  await getMedication(medicationId, userId);
 
-  const { page, size } = pagination;
+  const reminder = await Reminder.findOne({ where: { medicationId: medicationId } });
 
-  const cretedMedicationsWithCount = await Reminder.findAndCountAll({
-    limit: size,
-    offset: page * size,
-    // attributes: ['id', 'name', 'userId'],
+  return reminder;
+};
+
+const getUserReminders = async (userId, date) => {
+  const filterDate = date ? new Date(date) : new Date();
+  const medications = await Medication.findAll({
+    include: {
+      model: Reminder,
+      where: {
+        end_date: {
+          [Op.gte]: filterDate,
+        },
+        start_date: {
+          [Op.lte]: filterDate,
+        },
+      },
+      required: true,
+    },
     where: {
-      medicationId: medicationId,
+      userId: userId,
     },
   });
-  return {
-    content: cretedMedicationsWithCount.rows,
-    totalPages: Math.ceil(cretedMedicationsWithCount.count / Number.parseInt(size)),
-  };
+
+  let reminders = [];
+
+  medications.forEach((medication) => {
+    const buildedReminder = {};
+
+    // buildedReminder.title = `Don't forget to take your ${medication.dataValues.name} `;
+    // buildedReminder.body = `It's time to take your medicine - ${medication.dataValues.name} `;
+    buildedReminder.medicationId = medication.dataValues.id;
+    buildedReminder.medicationName = medication.dataValues.name;
+    buildedReminder.reminderId = medication.dataValues.reminder.dataValues.id;
+
+    medication.dataValues.reminder.dataValues.days.forEach((day) => {
+      buildedReminder.weekday = day;
+      medication.dataValues.reminder.dataValues.times.forEach((time) => {
+        buildedReminder.time = time;
+      });
+      reminders.push(buildedReminder);
+    });
+  });
+
+  return reminders;
 };
 
 const getMedication = async (id, userId) => {
@@ -51,26 +87,15 @@ const getMedication = async (id, userId) => {
   return medication;
 };
 
-const updateMedication = async (id, userId, body) => {
-  const medication = await Medication.findOne({ where: { id: id, userId: userId } });
-  if (!medication) {
-    throw new MedicationNotFoundException();
-  }
-  medication.name = body.name;
-  medication.UpdatedAt = new Date();
+const deleteReminders = async (userId, medicationId) => {
+  await getMedication(medicationId, userId);
 
-  const updatedMedication = await medication.save();
-  return updatedMedication;
-};
-
-const deleteMedication = async (id, userId) => {
-  await Medication.destroy({ where: { id: id, userId: userId } });
+  await Reminder.destroy({ where: { medicationId: medicationId } });
 };
 
 module.exports = {
-  create,
+  createOrUpdate,
   getReminders,
-  getMedication,
-  updateMedication,
-  deleteMedication,
+  getUserReminders,
+  deleteReminders,
 };
