@@ -1,4 +1,5 @@
 const Medication = require('./medication');
+const Reminder = require('../reminder/reminder');
 const MedicationNotFoundException = require('./medicationNotFoundException');
 
 const create = async (medication) => {
@@ -14,6 +15,10 @@ const getMedications = async (pagination, userId) => {
     limit: size,
     offset: page * size,
     attributes: ['id', 'name', 'userId'],
+    include: {
+      model: Reminder,
+      required: false,
+    },
     where: {
       userId: userId,
     },
