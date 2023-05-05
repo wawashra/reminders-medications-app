@@ -28,7 +28,7 @@ async function schedulePushNotification(reminder) {
         reminder.medicationName +
         " medication dose",
     },
-    trigger: { hour: hours, minute: minutes, repeats: true },
+    trigger: { weekday: weekday, hour: hours, minute: minutes, repeats: true },
   });
 }
 
