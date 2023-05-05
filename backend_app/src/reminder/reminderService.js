@@ -59,20 +59,19 @@ const getUserReminders = async (userId, date) => {
   let reminders = [];
 
   medications.forEach((medication) => {
-    const buildedReminder = {};
-
     // buildedReminder.title = `Don't forget to take your ${medication.dataValues.name} `;
     // buildedReminder.body = `It's time to take your medicine - ${medication.dataValues.name} `;
-    buildedReminder.medicationId = medication.dataValues.id;
-    buildedReminder.medicationName = medication.dataValues.name;
-    buildedReminder.reminderId = medication.dataValues.reminder.dataValues.id;
 
     medication.dataValues.reminder.dataValues.days.forEach((day) => {
-      buildedReminder.weekday = day;
       medication.dataValues.reminder.dataValues.times.forEach((time) => {
+        const buildedReminder = {};
+        buildedReminder.medicationId = medication.dataValues.id;
+        buildedReminder.medicationName = medication.dataValues.name;
+        buildedReminder.reminderId = medication.dataValues.reminder.dataValues.id;
         buildedReminder.time = time;
+        buildedReminder.weekday = day;
+        reminders.push(buildedReminder);
       });
-      reminders.push(buildedReminder);
     });
   });
 
