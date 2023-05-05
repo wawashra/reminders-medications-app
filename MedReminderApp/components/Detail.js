@@ -10,6 +10,8 @@ import { xorBy } from "lodash";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import SelectBox from "react-native-multi-selectbox";
 import Constants from "./utils/Constants";
+import TagInput from "react-native-tags-input";
+import { Ionicons } from "@expo/vector-icons";
 
 const Detail = ({ route, navigation }) => {
   const { item } = route.params;
@@ -21,15 +23,43 @@ const Detail = ({ route, navigation }) => {
     });
   };
 
-  const mapTimeToSelectBox = () => {
-    if (!item.reminder) return [];
-    return item.reminder.times.map((time) => {
-      return { item: time, id: Constants.TIMES_LIST_REVERCE[time] };
+  const [selectedTime, setSelectedTime] = useState(new Date());
+
+  const mapTimeToSelectdTags = () => {
+    const timesTags = {
+      tag: "",
+      tagsArray: [],
+    };
+
+    if (!item.reminder) return timesTags;
+
+    item.reminder.times.map((time) => {
+      const datetime = new Date("1970-01-01T" + time + "Z");
+      timesTags.tagsArray.push(datetime.toLocaleTimeString());
     });
+
+    return timesTags;
+  };
+
+  const [selectedTags, setSelectedTags] = useState(mapTimeToSelectdTags);
+
+  updateTagState = (state) => {
+    setSelectedTags(state);
+  };
+
+  const onChangeTimes = (event, date) => {
+    if (event.type === "set") {
+      setSelectedTime(date);
+    }
+  };
+
+  const addTimeToTimes = () => {
+    const tagsNew = { ...selectedTags };
+    selectedTags.tagsArray.push(selectedTime.toLocaleTimeString());
+    setSelectedTags(tagsNew);
   };
 
   const [selectedDays, setSelectedDays] = useState(mapDaysToSelectBox);
-  const [selectedTimes, setSelectedTimes] = useState(mapTimeToSelectBox);
 
   const [reminders, setReminders] = useState({
     id: item.reminder?.id,
@@ -46,10 +76,6 @@ const Detail = ({ route, navigation }) => {
 
   const onMultiChangeSelectedDays = () => {
     return (item) => setSelectedDays(xorBy(selectedDays, [item], "id"));
-  };
-
-  const onMultiChangeSelectedTimes = () => {
-    return (item) => setSelectedTimes(xorBy(selectedTimes, [item], "id"));
   };
 
   const onChangeName = (value) => {
@@ -69,7 +95,31 @@ const Detail = ({ route, navigation }) => {
     }
   };
 
-  const updateData = () => {
+  const updateMedication = () => {
+    var myHeaders = new Headers();
+
+    myHeaders.append(
+      "Authorization",
+      "Bearer af13005c6aeee31f7a405fc6bb1db2a6"
+    );
+
+    myHeaders.append("Content-Type", "application/json");
+
+    fetch("http://192.168.1.4:3000/medications/" + item.id, {
+      method: "PUT",
+      headers: myHeaders,
+      body: JSON.stringify({
+        name: medication.name,
+      }),
+    })
+      .then((response) => {
+        return response.text();
+      })
+      .then((result) => console.log("Result " + result))
+      .catch((error) => console.log("Error " + error));
+  };
+
+  const updateReminders = () => {
     var myHeaders = new Headers();
 
     myHeaders.append(
@@ -86,8 +136,8 @@ const Detail = ({ route, navigation }) => {
       newDays.push(day.item);
     });
 
-    selectedTimes.forEach((time) => {
-      newTimes.push(time.item);
+    selectedTags.tagsArray.forEach((time) => {
+      newTimes.push(time);
     });
 
     fetch("http://192.168.1.4:3000/medications/" + item.id + "/reminders", {
@@ -101,11 +151,18 @@ const Detail = ({ route, navigation }) => {
       }),
     })
       .then((response) => {
-        response.text();
-        navigation.push("Get");
+        navigation.pop();
+        return response.text();
       })
-      .then((result) => console.log(result))
-      .catch((error) => console.log(error));
+      .then((result) => console.log("Result " + result))
+      .catch((error) => console.log("Error " + error));
+  };
+
+  const updateData = () => {
+    if (medication.isMedicationChanged) {
+      updateMedication();
+    }
+    updateReminders();
   };
 
   const deleteData = () => {
@@ -113,31 +170,24 @@ const Detail = ({ route, navigation }) => {
 
     myHeaders.append(
       "Authorization",
-      "Bearer 62ddfa7559d5fdec64517e3ab70ee4fd60b2244e71fa042a44f914f8fa688263"
+      "Bearer af13005c6aeee31f7a405fc6bb1db2a6"
     );
 
     myHeaders.append("Content-Type", "application/json");
 
-    fetch("https://gorest.co.in/public-api/users/" + item.reminders.id, {
+    fetch("http://192.168.1.4:3000/medications/" + item.id, {
       method: "DELETE",
       headers: myHeaders,
-      body: JSON.stringify({
-        name: medication.name,
-        times: medication.times,
-        email: medication.email,
-        status: medication.status,
-      }),
     })
       .then((response) => {
-        response.text();
-        navigation.push("Get");
+        navigation.pop();
+        return response.text();
       })
-      .then((result) => console.log(result))
-      .catch((error) => console.log(error));
+      .then((result) => console.log("Result " + result))
+      .catch((error) => console.log("Error " + error));
   };
   return (
     <View style={styles.container}>
-      {/* <Text>Medical Name : </Text> */}
       <TextInput
         placeholder={"Name"}
         onChangeText={(value) => onChangeName(value)}
@@ -156,14 +206,26 @@ const Detail = ({ route, navigation }) => {
         />
       </View>
 
-      <View style={styles.datePicker}>
-        <SelectBox
-          label="Select Times"
-          options={Constants.TIMES_LIST}
-          selectedValues={selectedTimes}
-          onMultiSelect={onMultiChangeSelectedTimes()}
-          onTapClose={onMultiChangeSelectedTimes()}
-          isMulti
+      <TagInput
+        disabled={true}
+        updateState={updateTagState}
+        tags={selectedTags}
+      />
+
+      <View style={styles.timePicker}>
+        <Text>Times: </Text>
+        <DateTimePicker
+          mode="time"
+          value={selectedTime}
+          onChange={onChangeTimes}
+        />
+
+        <Ionicons
+          name={"ios-add-circle"}
+          size={25}
+          color={"blue"}
+          style={{ marginRight: 15 }}
+          onPress={addTimeToTimes}
         />
       </View>
 
@@ -222,6 +284,11 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   datePicker: {
+    flexDirection: "row",
+    alignItems: "center",
+    margin: 10,
+  },
+  timePicker: {
     flexDirection: "row",
     alignItems: "center",
     margin: 10,

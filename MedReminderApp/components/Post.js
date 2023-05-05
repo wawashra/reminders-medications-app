@@ -39,10 +39,11 @@ export default function Post() {
     })
       .then((response) => {
         setLoading(false);
-        response.text();
+
+        return response.text();
       })
-      .then((result) => console.log(result))
-      .catch((error) => console.log(error));
+      .then((result) => console.log("Result " + result))
+      .catch((error) => console.log("Error " + error));
   };
 
   return (
