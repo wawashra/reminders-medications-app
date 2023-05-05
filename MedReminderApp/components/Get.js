@@ -7,14 +7,16 @@ import {
   FlatList,
   TouchableOpacity,
 } from "react-native";
-
+import reSchedulePushNotification from "./utils/NotifyUtlils";
 // create a component
 const Get = ({ navigation }) => {
   const [medication, setMedication] = useState();
   useEffect(() => {
     const interval = setInterval(() => {
       getUserData();
-    }, 1000);
+    }, 10000);
+
+    reSchedulePushNotification();
 
     const unsubscribe = navigation.addListener("focus", () => {
       getUserData();
@@ -40,6 +42,7 @@ const Get = ({ navigation }) => {
         headers: myHeaders,
       });
       let json = await response.json();
+
       setMedication(json.content);
     } catch (error) {
       console.error(error);

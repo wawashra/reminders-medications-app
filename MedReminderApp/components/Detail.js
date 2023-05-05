@@ -2,6 +2,7 @@ import React, { Component, useState } from "react";
 import {
   View,
   Text,
+  Button,
   StyleSheet,
   TextInput,
   TouchableOpacity,
@@ -12,6 +13,7 @@ import SelectBox from "react-native-multi-selectbox";
 import Constants from "./utils/Constants";
 import TagInput from "react-native-tags-input";
 import { Ionicons } from "@expo/vector-icons";
+import reSchedulePushNotification from "./utils/NotifyUtlils";
 
 const Detail = ({ route, navigation }) => {
   const { item } = route.params;
@@ -34,7 +36,7 @@ const Detail = ({ route, navigation }) => {
     if (!item.reminder) return timesTags;
 
     item.reminder.times.map((time) => {
-      const datetime = new Date("1970-01-01T" + time + "Z");
+      const datetime = new Date("1970-01-01T" + time);
       timesTags.tagsArray.push(datetime.toLocaleTimeString());
     });
 
@@ -140,18 +142,22 @@ const Detail = ({ route, navigation }) => {
       newTimes.push(time);
     });
 
+    const requestBody = JSON.stringify({
+      times: newTimes,
+      days: newDays,
+      start_date: reminders.startDate,
+      end_date: reminders.endDate,
+    });
+
+    console.log("Req B " + requestBody);
     fetch("http://192.168.1.4:3000/medications/" + item.id + "/reminders", {
       method: "POST",
       headers: myHeaders,
-      body: JSON.stringify({
-        times: newTimes,
-        days: newDays,
-        start_date: reminders.startDate,
-        end_date: reminders.endDate,
-      }),
+      body: requestBody,
     })
       .then((response) => {
         navigation.pop();
+        reSchedulePushNotification();
         return response.text();
       })
       .then((result) => console.log("Result " + result))
