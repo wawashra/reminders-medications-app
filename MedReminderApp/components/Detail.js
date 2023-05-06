@@ -2,7 +2,6 @@ import React, { Component, useState } from "react";
 import {
   View,
   Text,
-  Button,
   StyleSheet,
   TextInput,
   TouchableOpacity,
@@ -28,25 +27,25 @@ const Detail = ({ route, navigation }) => {
   const [selectedTime, setSelectedTime] = useState(new Date());
 
   const mapTimeToSelectdTags = () => {
-    const timesTags = {
+    const timesChips = {
       tag: "",
       tagsArray: [],
     };
 
-    if (!item.reminder) return timesTags;
+    if (!item.reminder) return timesChips;
 
     item.reminder.times.map((time) => {
       const datetime = new Date("1970-01-01T" + time);
-      timesTags.tagsArray.push(datetime.toLocaleTimeString());
+      timesChips.tagsArray.push(datetime.toLocaleTimeString());
     });
 
-    return timesTags;
+    return timesChips;
   };
 
-  const [selectedTags, setSelectedTags] = useState(mapTimeToSelectdTags);
+  const [selectedTimes, setSelectedTimes] = useState(mapTimeToSelectdTags);
 
   updateTagState = (state) => {
-    setSelectedTags(state);
+    setSelectedTimes(state);
   };
 
   const onChangeTimes = (event, date) => {
@@ -56,9 +55,9 @@ const Detail = ({ route, navigation }) => {
   };
 
   const addTimeToTimes = () => {
-    const tagsNew = { ...selectedTags };
-    selectedTags.tagsArray.push(selectedTime.toLocaleTimeString());
-    setSelectedTags(tagsNew);
+    const tagsNew = { ...selectedTimes };
+    selectedTimes.tagsArray.push(selectedTime.toLocaleTimeString());
+    setSelectedTimes(tagsNew);
   };
 
   const [selectedDays, setSelectedDays] = useState(mapDaysToSelectBox);
@@ -138,7 +137,7 @@ const Detail = ({ route, navigation }) => {
       newDays.push(day.item);
     });
 
-    selectedTags.tagsArray.forEach((time) => {
+    selectedTimes.tagsArray.forEach((time) => {
       newTimes.push(time);
     });
 
@@ -216,7 +215,7 @@ const Detail = ({ route, navigation }) => {
       <TagInput
         disabled={true}
         updateState={updateTagState}
-        tags={selectedTags}
+        tags={selectedTimes}
       />
 
       <View style={styles.timePicker}>
