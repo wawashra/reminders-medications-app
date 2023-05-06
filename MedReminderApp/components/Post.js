@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import Constants from "expo-constants";
 
-export default function Post() {
+const Post = ({ navigation }) => {
   const [medication, setMedication] = useState({
     name: "",
   });
@@ -39,7 +39,7 @@ export default function Post() {
     })
       .then((response) => {
         setLoading(false);
-
+        navigation.pop();
         return response.text();
       })
       .then((result) => console.log("Result " + result))
@@ -63,7 +63,7 @@ export default function Post() {
       </TouchableOpacity>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -80,3 +80,4 @@ const styles = StyleSheet.create({
     marginVertical: 5,
   },
 });
+export default Post;
