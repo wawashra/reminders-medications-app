@@ -187,6 +187,7 @@ const Detail = ({ route, navigation }) => {
     })
       .then((response) => {
         navigation.pop();
+        reSchedulePushNotification();
         return response.text();
       })
       .then((result) => console.log("Result " + result))
